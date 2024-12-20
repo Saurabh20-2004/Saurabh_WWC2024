@@ -1,0 +1,19 @@
+#include<iostream>
+using namespace std;
+
+//Function to calculate sum
+int sum(int n){
+	int ans =0;
+	while(n!=0){
+		ans += n;
+		n--;
+	}
+	return ans;
+}
+
+int main(){
+	int n;
+	cout<<"Enter the last number: ";
+	cin>>n;
+	cout<<"Sum of first "<<n<<" natural number: "<<sum(n)<<endl;
+}
