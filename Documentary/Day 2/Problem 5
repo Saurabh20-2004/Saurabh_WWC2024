@@ -1,0 +1,231 @@
+#include <iostream>
+#include <string>
+#include <unordered_map>
+using namespace std;
+
+// Node for Seat information
+struct Seat {
+    int seatNumber;
+    bool isBooked;
+    Seat* next;
+
+    Seat(int number) : seatNumber(number), isBooked(false), next(nullptr) {}
+};
+
+// Node for Compartment
+struct Compartment {
+    string compartmentID;
+    Seat* seatsHead;
+    int totalSeats;
+    int bookedSeats;
+    Compartment* next;
+
+    Compartment(string id, int seats) : compartmentID(id), seatsHead(nullptr), totalSeats(seats), bookedSeats(0), next(nullptr) {
+        for (int i = seats; i > 0; i--) {
+            Seat* newSeat = new Seat(i);
+            newSeat->next = seatsHead;
+            seatsHead = newSeat;
+        }
+    }
+
+    ~Compartment() {
+        while (seatsHead) {
+            Seat* temp = seatsHead;
+            seatsHead = seatsHead->next;
+            delete temp;
+        }
+    }
+};
+
+// Node for Train
+struct Train {
+    string trainID;
+    Compartment* compartmentsHead;
+    Train* next;
+
+    Train(string id) : trainID(id), compartmentsHead(nullptr), next(nullptr) {}
+
+    ~Train() {
+        while (compartmentsHead) {
+            Compartment* temp = compartmentsHead;
+            compartmentsHead = compartmentsHead->next;
+            delete temp;
+        }
+    }
+};
+
+// Train Reservation System
+class TrainReservationSystem {
+private:
+    Train* trainsHead;
+
+    // Helper function to find a train
+    Train* findTrain(const string& trainID) {
+        Train* current = trainsHead;
+        while (current) {
+            if (current->trainID == trainID) return current;
+            current = current->next;
+        }
+        return nullptr;
+    }
+
+    // Helper function to find a compartment in a train
+    Compartment* findCompartment(Train* train, const string& compartmentID) {
+        Compartment* current = train->compartmentsHead;
+        while (current) {
+            if (current->compartmentID == compartmentID) return current;
+            current = current->next;
+        }
+        return nullptr;
+    }
+
+public:
+    TrainReservationSystem() : trainsHead(nullptr) {}
+
+    ~TrainReservationSystem() {
+        while (trainsHead) {
+            Train* temp = trainsHead;
+            trainsHead = trainsHead->next;
+            delete temp;
+        }
+    }
+
+    // Add a new train
+    void addTrain(const string& trainID) {
+        if (findTrain(trainID)) {
+            cout << "Train " << trainID << " already exists." << endl;
+            return;
+        }
+
+        Train* newTrain = new Train(trainID);
+        newTrain->next = trainsHead;
+        trainsHead = newTrain;
+        cout << "Train " << trainID << " added successfully." << endl;
+    }
+
+    // Add a compartment to a train
+    void addCompartment(const string& trainID, const string& compartmentID, int totalSeats) {
+        Train* train = findTrain(trainID);
+        if (!train) {
+            cout << "Train " << trainID << " not found." << endl;
+            return;
+        }
+
+        if (findCompartment(train, compartmentID)) {
+            cout << "Compartment " << compartmentID << " already exists in train " << trainID << "." << endl;
+            return;
+        }
+
+        Compartment* newCompartment = new Compartment(compartmentID, totalSeats);
+        newCompartment->next = train->compartmentsHead;
+        train->compartmentsHead = newCompartment;
+
+        cout << "Compartment " << compartmentID << " added to train " << trainID << " with " << totalSeats << " seats." << endl;
+    }
+
+    // Book a seat
+    void bookSeat(const string& trainID, const string& compartmentID) {
+        Train* train = findTrain(trainID);
+        if (!train) {
+            cout << "Train " << trainID << " not found." << endl;
+            return;
+        }
+
+        Compartment* compartment = findCompartment(train, compartmentID);
+        if (!compartment) {
+            cout << "Compartment " << compartmentID << " not found in train " << trainID << "." << endl;
+            return;
+        }
+
+        if (compartment->bookedSeats >= compartment->totalSeats) {
+            cout << "No seats available in compartment " << compartmentID << " of train " << trainID << "." << endl;
+            return;
+        }
+
+        Seat* current = compartment->seatsHead;
+        while (current) {
+            if (!current->isBooked) {
+                current->isBooked = true;
+                compartment->bookedSeats++;
+                cout << "Seat " << current->seatNumber << " booked in compartment " << compartmentID 
+                     << " of train " << trainID << "." << endl;
+                return;
+            }
+            current = current->next;
+        }
+    }
+
+    // Cancel a booking
+    void cancelSeat(const string& trainID, const string& compartmentID, int seatNumber) {
+        Train* train = findTrain(trainID);
+        if (!train) {
+            cout << "Train " << trainID << " not found." << endl;
+            return;
+        }
+
+        Compartment* compartment = findCompartment(train, compartmentID);
+        if (!compartment) {
+            cout << "Compartment " << compartmentID << " not found in train " << trainID << "." << endl;
+            return;
+        }
+
+        Seat* current = compartment->seatsHead;
+        while (current) {
+            if (current->seatNumber == seatNumber) {
+                if (current->isBooked) {
+                    current->isBooked = false;
+                    compartment->bookedSeats--;
+                    cout << "Seat " << seatNumber << " canceled in compartment " << compartmentID 
+                         << " of train " << trainID << "." << endl;
+                } else {
+                    cout << "Seat " << seatNumber << " is not currently booked." << endl;
+                }
+                return;
+            }
+            current = current->next;
+        }
+
+        cout << "Seat " << seatNumber << " not found in compartment " << compartmentID 
+             << " of train " << trainID << "." << endl;
+    }
+
+    // Check seat availability
+    void checkAvailability(const string& trainID, const string& compartmentID) {
+        Train* train = findTrain(trainID);
+        if (!train) {
+            cout << "Train " << trainID << " not found." << endl;
+            return;
+        }
+
+        Compartment* compartment = findCompartment(train, compartmentID);
+        if (!compartment) {
+            cout << "Compartment " << compartmentID << " not found in train " << trainID << "." << endl;
+            return;
+        }
+
+        cout << "Compartment " << compartmentID << " in train " << trainID 
+             << " has " << (compartment->totalSeats - compartment->bookedSeats) 
+             << " available seats out of " << compartment->totalSeats << "." << endl;
+    }
+};
+
+// Main function to demonstrate functionality
+int main() {
+    TrainReservationSystem system;
+
+    system.addTrain("Train1");
+    system.addCompartment("Train1", "CompartmentA", 10);
+    system.addCompartment("Train1", "CompartmentB", 5);
+
+    system.bookSeat("Train1", "CompartmentA");
+    system.bookSeat("Train1", "CompartmentA");
+    system.bookSeat("Train1", "CompartmentB");
+
+    system.checkAvailability("Train1", "CompartmentA");
+    system.checkAvailability("Train1", "CompartmentB");
+
+    system.cancelSeat("Train1", "CompartmentA", 1);
+    system.checkAvailability("Train1", "CompartmentA");
+
+    return 0;
+}
