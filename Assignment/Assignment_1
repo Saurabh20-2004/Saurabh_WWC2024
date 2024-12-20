@@ -1,0 +1,233 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <iomanip>
+
+using namespace std;
+
+// Item class to represent an item in the warehouse
+class Item {
+private:
+    int itemID;
+    string name;
+    string category;
+    int quantity;
+    int reorderLevel;
+
+public:
+    // Constructor to initialize item
+    Item(int id, string name, string category, int quantity, int reorderLevel)
+        : itemID(id), name(name), category(category), quantity(quantity), reorderLevel(reorderLevel) {}
+
+    // Accessor functions
+    int getItemID() const { return itemID; }
+    string getName() const { return name; }
+    string getCategory() const { return category; }
+    int getQuantity() const { return quantity; }
+    int getReorderLevel() const { return reorderLevel; }
+
+    // Mutator functions
+    void updateQuantity(int newQuantity) { quantity = newQuantity; }
+
+    // Function to check if stock is below reorder level
+    bool needsReordering() const {
+        return quantity <= reorderLevel;
+    }
+
+    // Display item details
+    void displayItem() const {
+        cout << "ID: " << itemID << "\tName: " << name
+             << "\tCategory: " << category << "\tQuantity: " << quantity
+             << "\tReorder Level: " << reorderLevel << endl;
+    }
+
+    // Function to update stock quantity (when stock is added or reduced)
+    void updateStock(int quantityChange) {
+        quantity += quantityChange;
+    }
+};
+
+// Inventory class to manage the collection of items
+class Inventory {
+private:
+    vector<Item> items;
+    int nextItemID = 1; // Unique item ID generator
+
+public:
+    // Function to add a new item
+    void addItem(string name, string category, int quantity, int reorderLevel) {
+        Item newItem(nextItemID++, name, category, quantity, reorderLevel);
+        items.push_back(newItem);
+    }
+
+    // Function to update the quantity of an existing item
+    void updateItemQuantity(int itemID, int quantityChange) {
+        for (auto& item : items) {
+            if (item.getItemID() == itemID) {
+                item.updateStock(quantityChange);
+                cout << "Updated item " << itemID << " successfully." << endl;
+                return;
+            }
+        }
+        cout << "Item with ID " << itemID << " not found." << endl;
+    }
+
+    // Function to display all items in the inventory
+    void displayInventory() const {
+        cout << left << setw(8) << "Item ID" << setw(20) << "Name" << setw(15) << "Category"
+             << setw(10) << "Quantity" << setw(15) << "Reorder Level" << endl;
+        cout << "--------------------------------------------------------------------------" << endl;
+        for (const auto& item : items) {
+            item.displayItem();
+        }
+    }
+
+    // Function to search for items by name
+    void searchByName(const string& name) const {
+        bool found = false;
+        for (const auto& item : items) {
+            if (item.getName() == name) {
+                item.displayItem();
+                found = true;
+            }
+        }
+        if (!found) {
+            cout << "Item with name \"" << name << "\" not found." << endl;
+        }
+    }
+
+    // Function to search for items by category
+    void searchByCategory(const string& category) const {
+        bool found = false;
+        for (const auto& item : items) {
+            if (item.getCategory() == category) {
+                item.displayItem();
+                found = true;
+            }
+        }
+        if (!found) {
+            cout << "No items found in category \"" << category << "\"." << endl;
+        }
+    }
+
+    // Function to alert the user of items that need reordering
+    void checkReorderLevels() const {
+        cout << "Items below reorder level:" << endl;
+        bool alert = false;
+        for (const auto& item : items) {
+            if (item.needsReordering()) {
+                item.displayItem();
+                alert = true;
+            }
+        }
+        if (!alert) {
+            cout << "No items need reordering." << endl;
+        }
+    }
+
+    // Function to export the inventory data to a file
+    void exportToFile(const string& filename) const {
+        ofstream file(filename);
+        if (file.is_open()) {
+            file << "Item ID,Name,Category,Quantity,Reorder Level\n";
+            for (const auto& item : items) {
+                file << item.getItemID() << ","
+                     << item.getName() << ","
+                     << item.getCategory() << ","
+                     << item.getQuantity() << ","
+                     << item.getReorderLevel() << "\n";
+            }
+            file.close();
+            cout << "Inventory data exported to " << filename << endl;
+        } else {
+            cout << "Failed to open file." << endl;
+        }
+    }
+};
+
+// Menu-driven interface for user interaction
+void showMenu() {
+    cout << "\nWarehouse Inventory Management System\n";
+    cout << "-------------------------------------\n";
+    cout << "1. Add New Item\n";
+    cout << "2. Update Item Quantity\n";
+    cout << "3. View Inventory\n";
+    cout << "4. Search Item by Name\n";
+    cout << "5. Search Item by Category\n";
+    cout << "6. Check Reorder Levels\n";
+    cout << "7. Export Inventory Data to File\n";
+    cout << "8. Exit\n";
+    cout << "Enter your choice: ";
+}
+
+int main() {
+    Inventory inventory;
+    int choice, id, quantity, reorderLevel;
+    string name, category;
+
+    while (true) {
+        showMenu();
+        cin >> choice;
+
+        switch (choice) {
+            case 1: // Add new item
+                cout << "Enter item name: ";
+                cin.ignore();
+                getline(cin, name);
+                cout << "Enter category: ";
+                getline(cin, category);
+                cout << "Enter initial quantity: ";
+                cin >> quantity;
+                cout << "Enter reorder level: ";
+                cin >> reorderLevel;
+                inventory.addItem(name, category, quantity, reorderLevel);
+                break;
+
+            case 2: // Update item quantity
+                cout << "Enter item ID to update: ";
+                cin >> id;
+                cout << "Enter quantity change (positive to add, negative to reduce): ";
+                cin >> quantity;
+                inventory.updateItemQuantity(id, quantity);
+                break;
+
+            case 3: // View inventory
+                inventory.displayInventory();
+                break;
+
+            case 4: // Search by name
+                cout << "Enter item name to search: ";
+                cin.ignore();
+                getline(cin, name);
+                inventory.searchByName(name);
+                break;
+
+            case 5: // Search by category
+                cout << "Enter category to search: ";
+                cin.ignore();
+                getline(cin, category);
+                inventory.searchByCategory(category);
+                break;
+
+            case 6: // Check reorder levels
+                inventory.checkReorderLevels();
+                break;
+
+            case 7: // Export to file
+                cout << "Enter filename to export inventory: ";
+                cin >> name;
+                inventory.exportToFile(name);
+                break;
+
+            case 8: // Exit
+                cout << "Exiting the program.\n";
+                return 0;
+
+            default:
+                cout << "Invalid choice, please try again.\n";
+        }
+    }
+
+    return 0;
+}
