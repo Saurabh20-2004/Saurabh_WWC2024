@@ -1,0 +1,146 @@
+#include <iostream>
+#include <thread>
+#include <chrono>
+#include <mutex>
+#include <memory>
+using namespace std;
+
+// Task structure
+struct Task {
+    int taskID;
+    int priority;
+    int executionTime; // in milliseconds
+    int period; // 0 if not periodic, non-zero for periodic tasks
+    shared_ptr<Task> next;
+
+    Task(int id, int pri, int execTime, int per = 0) 
+        : taskID(id), priority(pri), executionTime(execTime), period(per), next(nullptr) {}
+};
+
+// Task Scheduler class
+class TaskScheduler {
+private:
+    shared_ptr<Task> head;
+    mutex mtx;
+
+    // Helper function to print the current task queue
+    void printTaskList() {
+        lock_guard<mutex> lock(mtx);
+        cout << "Current Task Queue: ";
+        if (!head) {
+            cout << "Empty" << endl;
+            return;
+        }
+        shared_ptr<Task> temp = head;
+        do {
+            cout << "[ID: " << temp->taskID 
+                 << ", Priority: " << temp->priority 
+                 << ", Execution Time: " << temp->executionTime 
+                 << ", Period: " << temp->period << "] -> ";
+            temp = temp->next;
+        } while (temp && temp != head);
+        cout << (head ? "(Circular)" : "NULL") << endl;
+    }
+
+public:
+    TaskScheduler() : head(nullptr) {}
+
+    // Insert task into the list in priority order
+    void insertTask(int id, int priority, int execTime, int period = 0) {
+        lock_guard<mutex> lock(mtx);
+        auto newTask = make_shared<Task>(id, priority, execTime, period);
+
+        if (!head) {
+            head = newTask;
+            head->next = head; // Circular linked list
+            return;
+        }
+
+        // Insert based on priority
+        shared_ptr<Task> curr = head, prev = nullptr;
+        while (curr->priority >= priority && curr->next != head) {
+            prev = curr;
+            curr = curr->next;
+        }
+
+        // Insert at the correct position
+        if (!prev) { // Insert at the head
+            newTask->next = head;
+            shared_ptr<Task> temp = head;
+            while (temp->next != head) temp = temp->next; // Find the tail
+            temp->next = newTask;
+            head = newTask;
+        } else { // Insert in the middle or end
+            newTask->next = curr;
+            prev->next = newTask;
+        }
+    }
+
+    // Remove task upon completion
+    void removeTask(int taskID) {
+        lock_guard<mutex> lock(mtx);
+        if (!head) return;
+
+        shared_ptr<Task> curr = head, prev = nullptr;
+        do {
+            if (curr->taskID == taskID) {
+                if (prev) prev->next = curr->next;
+                if (curr == head) head = (head->next == head) ? nullptr : head->next;
+
+                // Circular linking correction
+                if (curr->next == curr) head = nullptr;
+                break;
+            }
+            prev = curr;
+            curr = curr->next;
+        } while (curr != head);
+    }
+
+    // Simulate task execution
+    void executeTasks() {
+        while (true) {
+            if (!head) {
+                cout << "No tasks to execute. Waiting..." << endl;
+                this_thread::sleep_for(chrono::seconds(1));
+                continue;
+            }
+
+            lock_guard<mutex> lock(mtx);
+            shared_ptr<Task> task = head;
+
+            cout << "Executing Task [ID: " << task->taskID << ", Priority: " << task->priority << "]" << endl;
+            this_thread::sleep_for(chrono::milliseconds(task->executionTime));
+
+            if (task->period > 0) { // Periodic task
+                task->executionTime += task->period;
+                head = head->next;
+            } else { // Remove non-periodic task
+                removeTask(task->taskID);
+            }
+
+            printTaskList();
+        }
+    }
+};
+
+int main() {
+    TaskScheduler scheduler;
+
+    // Insert tasks
+    scheduler.insertTask(1, 3, 2000);
+    scheduler.insertTask(2, 1, 1000);
+    scheduler.insertTask(3, 2, 1500, 5000); // Periodic task
+
+    // Run the scheduler in a separate thread
+    thread schedulerThread(&TaskScheduler::executeTasks, &scheduler);
+
+    // Simulate adding tasks in real-time
+    this_thread::sleep_for(chrono::seconds(3));
+    scheduler.insertTask(4, 4, 1000);
+
+    this_thread::sleep_for(chrono::seconds(2));
+    scheduler.insertTask(5, 5, 500);
+
+    schedulerThread.join();
+    return 0;
+}
