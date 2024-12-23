@@ -1,0 +1,34 @@
+#include <iostream>
+using namespace std;
+
+int lastRemaining(int n) {
+    bool leftToRight = true; // Start removing from left to right
+    int remaining = n;
+    int step = 1;            // Initial step size
+    int head = 1;            // Starting position
+
+    while (remaining > 1) {
+        if (leftToRight || remaining % 2 == 1) {
+            // Update the head if moving left to right or if remaining is odd
+            head += step;
+        }
+        // Update step size and remaining count
+        step *= 2;
+        remaining /= 2;
+        // Toggle direction
+        leftToRight = !leftToRight;
+    }
+
+    return head;
+}
+
+int main() {
+    int n;
+    cout << "Enter the value of n: ";
+    cin >> n;
+
+    int result = lastRemaining(n);
+    cout << "The last remaining number is: " << result << endl;
+
+    return 0;
+}
