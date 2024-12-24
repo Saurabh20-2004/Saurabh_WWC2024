@@ -1,0 +1,55 @@
+*#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <queue>
+
+// Ad structure
+struct Ad {
+    std::string advertiser;      // Advertiser name
+    double bidAmount;            // Bid amount for the ad
+    double engagementRate;       // Engagement rate for the ad
+    double remainingBudget;      // Remaining budget for the advertiser
+
+    // Constructor
+    Ad(const std::string& advertiser, double bidAmount, double engagementRate, double remainingBudget)
+        : advertiser(advertiser), bidAmount(bidAmount), engagementRate(engagementRate), remainingBudget(remainingBudget) {}
+
+    // Comparator for priority queue
+    bool operator<(const Ad& other) const {
+        if (bidAmount == other.bidAmount) {
+            if (engagementRate == other.engagementRate) {
+                return remainingBudget < other.remainingBudget; // Higher budget gets higher priority
+            }
+            return engagementRate < other.engagementRate; // Higher engagement rate gets higher priority
+        }
+        return bidAmount < other.bidAmount; // Higher bid gets higher priority
+    }
+};
+
+int main() {
+    // Priority queue for managing ads dynamically
+    std::priority_queue<Ad> adQueue;
+
+    // Sample ad data
+    adQueue.push(Ad("Advertiser A", 10.0, 0.8, 500.0));
+    adQueue.push(Ad("Advertiser B", 15.0, 0.7, 300.0));
+    adQueue.push(Ad("Advertiser C", 12.0, 0.9, 400.0));
+    adQueue.push(Ad("Advertiser D", 10.0, 0.85, 600.0));
+
+    // Adding a new ad dynamically
+    adQueue.push(Ad("Advertiser E", 20.0, 0.95, 1000.0));
+
+    // Process ads based on priority
+    std::cout << "Ads sorted by priority:\n";
+    while (!adQueue.empty()) {
+        Ad top = adQueue.top();
+        adQueue.pop();
+        std::cout << "Advertiser: " << top.advertiser
+                  << ", Bid Amount: " << top.bidAmount
+                  << ", Engagement Rate: " << top.engagementRate
+                  << ", Remaining Budget: " << top.remainingBudget << "\n";
+    }
+
+    return 0;
+}
