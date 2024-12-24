@@ -1,0 +1,83 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <map>
+
+// Video catalog structure
+struct Video {
+    std::string title;         // Title of the video
+    int views;                 // Total views
+    double rating;             // User rating
+    int releaseYear;           // Release year
+    double relevanceScore;     // Personalized relevance score
+
+    // Constructor
+    Video(const std::string& title, int views, double rating, int releaseYear, double relevanceScore = 0.0)
+        : title(title), views(views), rating(rating), releaseYear(releaseYear), relevanceScore(relevanceScore) {}
+};
+
+// Comparator for sorting by popularity (views and rating)
+bool compareByPopularity(const Video& v1, const Video& v2) {
+    if (v1.views == v2.views) {
+        return v1.rating > v2.rating; // Break ties with higher rating
+    }
+    return v1.views > v2.views; // More views come first
+}
+
+// Comparator for sorting by recency (release year)
+bool compareByRecency(const Video& v1, const Video& v2) {
+    return v1.releaseYear > v2.releaseYear;
+}
+
+// Comparator for sorting by relevance score
+bool compareByRelevance(const Video& v1, const Video& v2) {
+    return v1.relevanceScore > v2.relevanceScore;
+}
+
+int main() {
+    // Sample video data
+    std::vector<Video> catalog = {
+        {"Movie A", 1000000, 4.5, 2023},
+        {"Movie B", 500000, 4.8, 2022},
+        {"Show C", 2000000, 4.2, 2021},
+        {"Show D", 750000, 4.7, 2023},
+        {"Movie E", 300000, 4.9, 2020}
+    };
+
+    // Sort by popularity
+    std::sort(catalog.begin(), catalog.end(), compareByPopularity);
+    std::cout << "Videos sorted by popularity:\n";
+    for (const auto& video : catalog) {
+        std::cout << "Title: " << video.title
+                  << ", Views: " << video.views
+                  << ", Rating: " << video.rating
+                  << ", Release Year: " << video.releaseYear << "\n";
+    }
+
+    // Sort by recency
+    std::sort(catalog.begin(), catalog.end(), compareByRecency);
+    std::cout << "\nVideos sorted by recency:\n";
+    for (const auto& video : catalog) {
+        std::cout << "Title: " << video.title
+                  << ", Views: " << video.views
+                  << ", Rating: " << video.rating
+                  << ", Release Year: " << video.releaseYear << "\n";
+    }
+
+    // Assign and sort by relevance (example scores for demonstration)
+    for (size_t i = 0; i < catalog.size(); ++i) {
+        catalog[i].relevanceScore = 10.0 - i; // Example relevance scores
+    }
+    std::sort(catalog.begin(), catalog.end(), compareByRelevance);
+    std::cout << "\nVideos sorted by relevance:\n";
+    for (const auto& video : catalog) {
+        std::cout << "Title: " << video.title
+                  << ", Views: " << video.views
+                  << ", Rating: " << video.rating
+                  << ", Release Year: " << video.releaseYear
+                  << ", Relevance Score: " << video.relevanceScore << "\n";
+    }
+
+    return 0;
+}
