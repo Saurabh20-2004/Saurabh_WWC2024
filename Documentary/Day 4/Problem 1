@@ -1,0 +1,66 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <string>
+#include <algorithm>
+
+// Transaction structure
+struct Transaction {
+    int id;                  // Unique transaction ID
+    double amount;           // Transaction amount
+    int frequency;           // Number of transactions by the user
+    std::string location;    // Geographical location
+    double suspiciousScore;  // Calculated suspiciousness score
+
+    // Constructor
+    Transaction(int id, double amount, int frequency, const std::string& location, double score)
+        : id(id), amount(amount), frequency(frequency), location(location), suspiciousScore(score) {}
+
+    // Overloading < operator for sorting based on suspiciousScore (higher is more suspicious)
+    bool operator<(const Transaction& other) const {
+        return suspiciousScore < other.suspiciousScore;
+    }
+};
+
+// Function to calculate suspiciousness score based on given criteria
+double calculateSuspiciousScore(double amount, int frequency, const std::string& location) {
+    double locationWeight = (location == "high-risk") ? 2.0 : 1.0; // High-risk location weight multiplier
+    return amount * 0.5 + frequency * 0.3 + locationWeight * 10;   // Example formula
+}
+
+int main() {
+    // Sample transactions
+    std::vector<Transaction> transactions = {
+        {1, 1000.0, 5, "low-risk", 0.0},
+        {2, 5000.0, 10, "high-risk", 0.0},
+        {3, 200.0, 2, "low-risk", 0.0},
+        {4, 1500.0, 8, "high-risk", 0.0},
+        {5, 3000.0, 6, "low-risk", 0.0}
+    };
+
+    // Calculate suspiciousness scores for all transactions
+    for (auto& transaction : transactions) {
+        transaction.suspiciousScore = calculateSuspiciousScore(transaction.amount, transaction.frequency, transaction.location);
+    }
+
+    // Use a priority queue to sort transactions by suspiciousness score (highest first)
+    std::priority_queue<Transaction> transactionQueue;
+    for (const auto& transaction : transactions) {
+        transactionQueue.push(transaction);
+    }
+
+    // Display transactions sorted by suspiciousness score
+    std::cout << "High-risk transactions sorted by suspiciousness score:\n";
+    while (!transactionQueue.empty()) {
+        Transaction top = transactionQueue.top();
+        transactionQueue.pop();
+        std::cout << "Transaction ID: " << top.id
+                  << ", Amount: " << top.amount
+                  << ", Frequency: " << top.frequency
+                  << ", Location: " << top.location
+                  << ", Suspicious Score: " << top.suspiciousScore << "\n";
+    }
+
+    return 0;
+}
+\
