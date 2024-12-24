@@ -1,0 +1,81 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <map>
+
+// Trade record structure
+struct Trade {
+    std::string timestamp;   // Timestamp of the trade
+    std::string symbol;      // Stock symbol
+    double price;            // Trade price
+    int volume;              // Trade volume
+
+    // Constructor
+    Trade(const std::string& timestamp, const std::string& symbol, double price, int volume)
+        : timestamp(timestamp), symbol(symbol), price(price), volume(volume) {}
+};
+
+// Comparator for sorting by timestamp
+bool compareByTimestamp(const Trade& t1, const Trade& t2) {
+    return t1.timestamp < t2.timestamp;
+}
+
+// Comparator for sorting by stock symbol
+bool compareBySymbol(const Trade& t1, const Trade& t2) {
+    return t1.symbol < t2.symbol;
+}
+
+// Function to group trades by volume trends
+std::map<int, std::vector<Trade>> groupByVolume(const std::vector<Trade>& trades) {
+    std::map<int, std::vector<Trade>> volumeGroups;
+    for (const auto& trade : trades) {
+        volumeGroups[trade.volume].push_back(trade);
+    }
+    return volumeGroups;
+}
+
+int main() {
+    // Sample trade data
+    std::vector<Trade> trades = {
+        {"2024-12-24T10:00:01", "AAPL", 150.25, 100},
+        {"2024-12-24T10:00:05", "GOOG", 2800.75, 200},
+        {"2024-12-24T10:00:03", "AAPL", 151.00, 150},
+        {"2024-12-24T10:00:02", "MSFT", 299.50, 100},
+        {"2024-12-24T10:00:04", "GOOG", 2801.50, 150}
+    };
+
+    // Sort trades by timestamp
+    std::sort(trades.begin(), trades.end(), compareByTimestamp);
+    std::cout << "Trades sorted by timestamp:\n";
+    for (const auto& trade : trades) {
+        std::cout << "Timestamp: " << trade.timestamp
+                  << ", Symbol: " << trade.symbol
+                  << ", Price: " << trade.price
+                  << ", Volume: " << trade.volume << "\n";
+    }
+
+    // Sort trades by stock symbol
+    std::sort(trades.begin(), trades.end(), compareBySymbol);
+    std::cout << "\nTrades sorted by stock symbol:\n";
+    for (const auto& trade : trades) {
+        std::cout << "Timestamp: " << trade.timestamp
+                  << ", Symbol: " << trade.symbol
+                  << ", Price: " << trade.price
+                  << ", Volume: " << trade.volume << "\n";
+    }
+
+    // Group trades by volume
+    auto volumeGroups = groupByVolume(trades);
+    std::cout << "\nTrades grouped by volume:\n";
+    for (const auto& [volume, group] : volumeGroups) {
+        std::cout << "Volume: " << volume << "\n";
+        for (const auto& trade : group) {
+            std::cout << "    Timestamp: " << trade.timestamp
+                      << ", Symbol: " << trade.symbol
+                      << ", Price: " << trade.price << "\n";
+        }
+    }
+
+    return 0;
+}
