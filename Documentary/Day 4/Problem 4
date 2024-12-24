@@ -1,0 +1,55 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <queue>
+
+// Patient structure
+struct Patient {
+    std::string name;         // Patient name
+    int triagePriority;       // Triage priority (higher is more critical)
+    int severity;             // Severity of condition (higher is more severe)
+    std::string arrivalTime;  // Arrival time
+
+    // Constructor
+    Patient(const std::string& name, int triagePriority, int severity, const std::string& arrivalTime)
+        : name(name), triagePriority(triagePriority), severity(severity), arrivalTime(arrivalTime) {}
+
+    // Comparator for priority queue
+    bool operator<(const Patient& other) const {
+        if (triagePriority == other.triagePriority) {
+            if (severity == other.severity) {
+                return arrivalTime > other.arrivalTime; // Earlier arrival gets higher priority
+            }
+            return severity < other.severity; // Higher severity gets higher priority
+        }
+        return triagePriority < other.triagePriority; // Higher triage priority gets higher priority
+    }
+};
+
+int main() {
+    // Priority queue for managing patients dynamically
+    std::priority_queue<Patient> patientQueue;
+
+    // Sample patient data
+    patientQueue.push(Patient("Alice", 5, 8, "10:01"));
+    patientQueue.push(Patient("Bob", 3, 7, "10:05"));
+    patientQueue.push(Patient("Charlie", 5, 9, "10:02"));
+    patientQueue.push(Patient("Diana", 4, 6, "10:03"));
+
+    // Adding a new patient dynamically
+    patientQueue.push(Patient("Eve", 6, 10, "10:06"));
+
+    // Process patients based on priority
+    std::cout << "Patients sorted by priority:\n";
+    while (!patientQueue.empty()) {
+        Patient top = patientQueue.top();
+        patientQueue.pop();
+        std::cout << "Name: " << top.name
+                  << ", Triage Priority: " << top.triagePriority
+                  << ", Severity: " << top.severity
+                  << ", Arrival Time: " << top.arrivalTime << "\n";
+    }
+
+    return 0;
+}
